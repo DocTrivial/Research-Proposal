@@ -1,0 +1,280 @@
+
+
+\chapter{Background and Literature review} \label{chap-3}
+
+In this section, we will establish some common notation and present several core algorithms for computation on skew-polynomials, as well as other operations that may be used as a "toolbox" for any other algorithms discussed.
+
+\section{Background}
+The complexity analysis of algorithms over a finite field is traditionally done using an algebraic model counting elementary field operations $+, -, \times, \cdot^{-1}$ at unit cost. Modular composition notably does not admit a simple analysis in terms of algebraic complexity, and is typically only used to compute the action of powers of the Frobenius map on field elements. For algorithms where this is necessary, two runtimes may be stated: an algebraic one where applications of Frobenius maps are treated with unit cost and a bit complexity model where the cost of using modular composition is counted. 
+
+Throughout this work, we will let $\F_{q}$ denote a field of order $q$ a prime power. We will let $\L$ denote a finite extension of $\F_q$ with $[\L:\F_q] = n$. Let $\sigma$ denote an endomorphism of $\L$. The ring of \textit{skew-polynomials} $\L[\tau;\sigma]$ are polynomials with coefficients in $\L$ in the variable $\tau$ subject to the relation $ \tau c = \sigma(c) \tau $ for $c \in L$.  Note that this relation induces a canonical $\F_q$-algebra homomorphism
+
+
+    \begin{align*}
+    \L[\tau; \sigma] & \mapsto \textnormal{End}_{\F_q}[\L] \\
+    \tau & \mapsto \sigma
+    \end{align*}
+
+Typically, $\sigma$ will be the $q$-order Frobenius $\sigma(c) = c^q$, and since we will often implicitly associate a skew polynomial with its corresponding endomorphism we will simply write $\L\{\tau\}$ for skew-polynomial rings. This also suggests a natural isomorphism between $\L[\tau]$ and the $\F_q$-algebra $\L[x]^q$ of polynomials in $x$ whose terms all have exponents $q^i$ for $i \geq 0$ and whose product is ordinary polynomial composition rather than multiplication.
+
+Commutative polynomials of degree at most $n$ over a $\F_q$ can be multiplied in $O(n\log n)$ field operations, while arithmetic over $\F_q$ itself will be assumed to run in $O(\log q \log \log q \log \log \log q)$. We will let $\omega$ denote a real number such that two $s \times s$ matrices over any ring $R$ can be multiplied in $O(s^{\omega})$ ring operations. A highly celebrated result due to Kedlaya and Umans in \cite{Kedlaya:2011:FPF:2340436.2340448} established a quasi-optimal algorithm for modular composition of polynomials $f(g) \bmod h$ with $f,g,h \in \F_q[x]$ of degree at most $n$ with bit complexity $(n^{1 + \epsilon} \log q)^{1+o(1)}$ 
+
+\section{Elementary Algorithms on Linearized Polynomials}
+
+\subsection{Skew-Polynomial Multiplication}
+
+Perhaps the most elementary non-trivial algorithm one would consider on skew-polynomials is that of multiplication. This appears to be a somewhat less straightforward question than in the commutative case, with at least two algorithms co-existing depending on the chosen parameters. A common feature of the time complexity analysis is the assumption that a preprocessing step can be done in negligible time to determine the action of a map on a finite field. In the next section we analyze multiplication algorithms due to Puchinger and Wachter-Zeh \cite{PUCHINGER2017b} as well as Caruso and Le Borgne \cite{CaLe17}, and let $\SM(d)$ denote the complexity of of multiplying two degree $d$ skew polynomials. In particular we focus on using a bit complexity model, which allows us to leverage the modular composition algorithm of Kedlaya and Umans \cite{Kedlaya:2011:FPF:2340436.2340448} to explicitly compute Frobenius powers. The analysis done here is a repeat of what was done in my Master's thesis \cite{Musleh}.
+
+\begin{problem}[Skew-polynomial Multiplication]
+Given two skew-polynomials $a, b \in \F_{q^n}[\tau]_s$, compute $a \cdot b$.
+\end{problem}
+
+\subsubsection{The Puchinger \& Wachter-Zeh Algorithm}
+
+When $s \ll n$, the algorithm described by \cite[Th.7]{PUCHINGER2017b} has the better bit complexity. Set the factors $a = \sum_{i=0}^s a_i \tau^i$, $b = \sum_{i=0}^s b_i \tau^i $, and set $s^* = \lceil \sqrt{s + 1} \rceil $. We can split $a$ into a sum of $s^*$ terms of the form $a^{(i)} = \sum_{j=0}^{s^* - 1} a_{is^* + j}\tau^{id^* + j}$ such that $a = \sum_{i=0}^{s^* - 1} a^{(i)}$. This in turn splits the product $c$ into $s^*$ terms $c = \sum_{i=0}^{s^* - 1} c^{(i)}$ with $c^{(i)} = a^{(i)}b$. We can multiply through the expression for $c^{(i)}$:
+
+\begin{equation*}
+    c^{(i)} = \sum_{j=0}^{s^* - 1} a_{is^* + j}\tau^{is^* + j} \bigg( \sum_{k = 0}^{s} b_k \tau^k \bigg) = \sum_{k=0}^{s + s^* - 1} \bigg( \sum_{j=0}^{k} a_{is^* +j}\sigma^{is^* + j}(b_{k -j})\tau^{is^* + k} \bigg) 
+\end{equation*}
+
+Construct matrices $A, B, C$ such that:
+
+\begin{align*}
+    A_{i,j} & = \sigma^{-is^*}(a_{is^* + j}) \\
+    B_{i,k} & = \sigma^{i}(b_{k-i}) \\
+    C_{i,k} & = \sigma^{-is^*}(c_k^{(i)})
+\end{align*}
+
+Where $0 \leq i,j \leq s^* -1$, $0 \leq k \leq s + s^* - 1 $. Thus, we may compute $c$ by computing the matrix product $C = A \cdot B$ to determine the entries $\sigma^{-is^*}(c_k^{(i)})$, through which we may compute $c = \sum_{i = 0}^{s^* - 1}\sum_{k = 0}^{s + s^* - 1} c_k^{(i)}$. The computationally intensive steps are computing the action of $O(s^{1/2})$ distinct automorphisms $\sigma^{\pm is^*}, \sigma^i$ for up to $O(s^{3/2})$ elements. When the cost of multiplication is considered, the total cumulative bit complexity is $(s^{(\omega + 1)/2} n^{1 + \epsilon} \log q)^{1 + o(1)}$.
+
+\subsubsection{The Caruso \& Le Borgne Algorithm}
+
+Here we will provide an overview of the algorithm given in \cite[Sec.2]{CaLe17}. The critical insight of the algorithm is their proposition 1.6, which relates the action of skew-polynomials to commutative multiplication modulo $T^n - 1$. We restate the proposition here:
+
+\begin{proposition*}{\cite[Prop. 1.6]{CaLe17}}
+Let $T$ be a commutative variable, and fix a normal basis $b_0, \ldots, b_{n-1}$ for $\L/\F_q$ and let $b = \sum_{i=0}^{n-1} b_i T^i$. Further let $a = \sum_{i=0}^{n-1} a_i \tau^i\in \L[\tau]$ and set $a(T) = \sum_{i=0}^{n-1} a_i T^i$, $c_i = a(b_i)$ and $c(T) = \sum c_iT^i$. Then
+
+\begin{equation*}
+    c(T) = a(T)b(T) \mod T^n -1
+\end{equation*}
+
+\end{proposition*}
+
+Namely, the above proposition reduces computing the action of $a$ on a normal basis to commutative polynomial multiplication when both are considered modulo $T^n - 1$. Given any two $a, a' \in \L[\tau]/(X^n - 1)$, the product $aa'$ can be computed as follows:
+
+\begin{enumerate}
+    \item Compute $c(T) = a(T) b(T)$, $c'(T) = a'(T)b(T)$.
+    \item Extract from $c,c'$ the matrices $M,M'$ respectively for the action of $a, a'$ on $\L/\F_q$ where the domain uses the normal basis and the codomain uses the standard basis.
+    \item Compute $M B M'$ where $B$ is the change of basis matrix from the standard basis to the normal basis. This gives the action of the product $aa'$ on $\L/\F_q$.
+    \item Given the product $MBM'$ compute the corresponding $\hat{c}(T)$ such that $\hat{c}b^{-1}(T) = a(T)a'(T)$ and extract the coefficients of $aa'$
+\end{enumerate}
+
+The main computational bottlenecks are the computation of the matrix product $MBM'$, which costs $O(n^{\omega})$ $\F_q$ operations, as well as the construction of a normal basis for $\L$ over $\F_q$. 
+
+\subsection{Division and Factorization}
+
+The ring $\sring$ is a right and left Euclidean domain and therefore admits a non-commutative analog of the Euclidean algorithm \cite{ore}. 
+
+\begin{problem}[Right Euclidean Division]
+Given skew-polynomials $a, b$, compute skew-polynomials $\omega, \rho$ such that $\skewdeg(\rho) < \skewdeg(b)$ and $a = \omega b + \rho$. In this case we write $\RED(a, b) = (\omega, \rho)$. 
+\end{problem}
+
+Elementary division problems concerning skew polynomials were first studied in $\cite{ore}$, with the first thorough algorithmic treatment, including the first non-trivial factorization scheme for skew polynomials, given in \cite{GIESBRECHT1998463}. In \cite{CaLe17} an algorithm for right Euclidean division of a degree $d_1$ skew polynomial by a degree $d_2$ skew polynomial with complexity in $\tilde{O}(\SM(d_1))$. The procedure is based on a classical algorithm for Euclidean division on commutative polynomials seen in \cite{Gathen:2003:MCA:945759}. 
+
+Define the pseudo-inversion operator of order $\delta$ on $\sring_{\delta}$:
+
+\begin{equation}
+    T_{\delta}\bigg(\sum_{i=0}^{\delta} a_i \tau^i \bigg) = \sum_{i=0}^{\delta} a_{\delta - i} \tau^{-i}
+\end{equation}
+
+For a skew polynomial $\rho = \sum_{j=0}^{d}\rho_j\tau^j$, let $\rho^{(i)} = \sum_{j=0}^{d}\sigma^i(\rho_j)\tau^j$. It is fairly straightforward to check that $T_{\delta}$ is linear and satisfies the relation $T_{\delta_1 + \delta_2}(ab) = T_{\delta_1}(a)T_{\delta_2}(b^{(\delta_1)})$.
+
+
+\subsection{Minimal Subspace Polynomial \& Multipoint Evaluation}
+
+Let $V \subset \L$ be a linear subspace of dimension $m \leq n$ over $\F_q$. The \textit{minimal subspace polynomial} $\MSP(V)$ is the monic skew-polynomial of lowest skew-degree whose kernel contains $V$. The MSP of a linear subspace is unique and has skew-degree $d$ if $V$ has dimension $d$. Consequently, a monic degree $d$ skew-polynomial is equal to $\MSP(V)$ for some subspace $V$ if and only if it has a set of $d$ linearly independent roots. 
+
+\begin{problem}[Minimal Subspace Polynomial]
+Given a linear subspace $V \subset \L$ over $\F_q$, determine its minimal subspace polynomial, $\MSP(V)$.
+\end{problem}
+
+\begin{problem}[Multipoint Evaluation]
+Given a set of $m$ points $v_1, \ldots, v_s$ and $\rho \in \sring$, compute the set $\MPE(\rho; v_1, \ldots, v_s) = \{ \rho(v_1), \ldots, \rho(v_s) \}$.
+\end{problem}
+
+In the case of Multipoint evaluation, it suffices to compute the evaluation on a maximal linearly independent subset of $v_1, \ldots, v_s$ with respect to cardinality. Two mutually recursive algorithms were proposed in $\cite{PUCHINGER2017b}$ to solve both problems:
+
+\begin{algorithm}
+\caption{Minimal Subspace Polynomial \cite{PUCHINGER2017b}}
+\label{msp1}
+\hspace*{\algorithmicindent} \textbf{Input} A basis $\{ v_1, \ldots, v_d \}$ for $V \subset \F_{q^n}$\\
+ \hspace*{\algorithmicindent} \textbf{Output} A monic skew-polynomial $\rho \in \F_{q^n}\{\tau\}_d$ of degree $d$ such that $\rho(v_i) = 0$ for each $1 \leq i \leq d$.  \\
+ \begin{algorithmic}[1]
+ \If{$d = 1$}{}
+            \State $\rho \gets 1 \textnormal{ if } v_1 = 0$
+
+            \State  $ \rho \gets \tau - v_i^{q-1} \textnormal{ otherwise}$
+        
+\Else {
+      \State $ a \gets \MSP(v_1, \ldots v_{d/2})$
+    
+    \State $\{v_{d/2 + 1}', \ldots, v_d' \} \gets \MPE(a; v_{d/2 + 1},\ldots, v_d)$
+    
+    \State $ b \gets \MSP(v_{d/2 + 1}', \ldots, v_d')$
+    
+    \State $\rho \gets ba$}
+    \EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Multipoint Evaluation \cite{PUCHINGER2017b}}
+\label{mpe1}
+\hspace*{\algorithmicindent} \textbf{Input} A skew polynomial $\rho \in \F_{q^n}\{\tau \}$ of degree $d$, and a set of linearly independent evaluation points $\{ v_1, \ldots, v_s \} \subset \F_{q^n}$. \\
+ \hspace*{\algorithmicindent} \textbf{Output} The set $\{ \rho(v_1), \ldots, \rho(v_s) \} \subset  \F_{q^n}$ \\
+ \begin{algorithmic}[1]
+ \If{$\skewdeg(\rho) = 1$}
+            \State $\textnormal{\textbf{Return}} \{\rho(v_1), \ldots, \rho(v_s) \}$
+        
+\Else {
+      \State $ a \gets \MSP(v_1, \ldots v_{s/2})$
+      \State $ b \gets \MSP(v_{s/2 + 1}, \ldots v_{s})$
+      \State $ (\omega_a, \rho_a) \gets \RED(\rho, a) $
+      \State$ (\omega_b, \rho_b) \gets \RED(\rho, b) $
+      \State $\{ \rho(v_1), \ldots, \rho(v_{s/2}) \} \gets \MPE(\rho_a; v_1, \ldots v_{s/2}))$
+      \State $\{ \rho(v_{s/2 + 1}), \ldots, \rho(v_s) \} \gets \MPE(\rho_b; v_{s/2 + 1}, \ldots v_{s}))$}
+      \EndIf
+ \end{algorithmic}
+\end{algorithm}
+
+A detailed complexity analysis for these mutually recursive algorithms was given in $\cite{PUCHINGER2017b}$. The runtimes $\MSPr(d)$ and $\MPEr(d, s)$ of both algorithms can be expressed recursively.
+\begin{align*}
+    \MSPr(d) & = 2\MSPr(d/2) + \MPEr(d/2, d/2) + \Mr(d/2) \\
+    \MPEr(d, s) & = 2\MSPr(s/2) + 2\MPEr(d/2, d/2) + \REDr(s)
+\end{align*}
+
+By memoizing the output of $\MSP$ at line 5, the call to $\MSP$ at line 4 can be avoided, and the recursive expression for $\MPEr$ becomes
+
+\begin{equation*}
+    \MPEr(d, s) = \MSPr(s/2) + 2\MPEr(d/2, d/2) + \REDr(s).
+\end{equation*}
+
+Both expressions are simultaneously bounded by a complexity class $C(d)$ satisfying the recurrence
+
+\begin{equation*}
+    C(d) = 3C(d/2) + \REDr(d)
+\end{equation*}
+
+Using the master theorem, this yields a complexity of $C(d) = O(d^{\max(\log_2(3), (\omega + 1)/2)}\log d)$ operations in $\L$.
+
+
+
+\section{Drinfeld Modules}
+
+We begin with the ring of regular maps $\F_q[x]$ and fix a map $\gamma : \F_q[x] \to \L$. Then a \textit{Drinfeld Module} over $(\L, \gamma)$ is a ring homomorphism $\phi: \F_q[x] \to \L\{\tau \}$ such that
+
+\begin{equation*}
+    \phi(a) = \sum_{i=1}^{d}c_i\tau^i + \gamma(a)
+\end{equation*}
+
+Keeping with the literature, we will often use the notation $\phi_a = \phi(a)$. A Drinfeld module may be specified by its action on $x$, and thus we may refer to a Drinfeld module by specifying the $r$ coefficients $(\Delta_r, \ldots, \Delta_1)$ such that $\Delta_r \neq 0$ and $\phi_x = \sum_{i=1}^{r}\Delta_i \tau^i + \gamma(x)$. The integer $r$ is referred to as the \textit{rank} of the Drinfeld module. A morphism from a Drinfeld module $\phi$ to $\psi$ is an element $u \in \L\{ \tau\}$  such that $u \phi_a = \psi_a u$ for all $u \in \F_q[x]$. The absolute Frobenius map is the element $\tau^n \in \L\{ \tau^n \}$. The minimal polynomial of the Frobenius element is the monic polynomial $M_{\phi}(X) = X^d - \sum_{i=0}^{d-1} a_iX^i \in \F_q[x][X]$ of least degree such that 
+
+\begin{equation*}
+    \tau^{dn} - \sum_{i=0}^{d-1}\phi_{a_i} \tau^{ni} = 0
+\end{equation*}
+
+and such that $\deg a_i \leq \frac{(r - i)n}{r}$. An explicit formula to compute $a_0$ is given in \cite{GaPa18}:
+
+\begin{equation}\label{norm}
+    a_0 = (-1)^{r + n(r+1)}N_{\F_{\mathfrak{p}}/\F_q}(\Delta_r)^{-1} \mathfrak{p}^{ \frac{n d}{ r m}}
+\end{equation}
+
+The coefficient $a_0$ is referred to as the \textit{Frobenius norm}, and the preceding formula allows for its calculation in $(n\log q)^{1+o(1)}$ bit operations. 
+
+\subsection{Finding the Minimal Polynomial when $r = 2$}
+When $r = 2$, the Frobenius element is known to satisfy the relation
+
+\begin{equation}\label{charrank2}
+    \tau^{2n} - \phi_{a}\tau^n - \phi_b = 0
+\end{equation}
+
+Such that either $M_\phi(X) = X^2 - aX - b$ or $M_{\phi}(X)^2 = X^2 - aX - b$. We may determine $b$ using equation $(\ref{norm})$, and therefore it suffices to compute $a$ and determine whether the resulting polynomial is a square. The coefficient $a$ is referred to as the $\textit{Frobenius trace}$.
+
+The classical algorithm for computing the minimal polynomials of Drinfeld modules is due to Gekeler in \cite{frobdist}. Write $\phi_{x^i} = \sum_{j=0}^{2i}f_{i,j}\tau^j$, and these $\phi_{x^i}$ satisfy
+
+\begin{equation*}
+    \phi_{x^{i+1}} = \phi_{x}\phi_{x^i} = (\Delta_2 \tau^2 + \Delta_1 \tau + \gamma(x))\phi_{x^i}
+\end{equation*}
+
+the coefficients $f_{i,j}$ therefore satisfy the recurrence:
+
+\begin{equation}
+ f_{i+1, j} =  \gamma(x)f_{i,j} + \Delta_1f_{i,j-1}^{q} + \Delta_2 f_{i, j-2}^{q^2}  
+\end{equation}
+
+This recurrence allows the computation of $\phi_{x^2}, \ldots, \phi_{x^k}$ in $(k^2n\log^2q)^{1+o(1)}$ bit operations. Computing up to $k = n/2$ and substituting $\phi_a = \sum_{i=0}^{n/2} a_i \phi_{x^i} = \sum_{i=0}^{n/2}\sum_{j = 0}^{2i} a_i f_{i,j}\tau^{j}$ into equation \ref{charrank2}, along with the computed value for $\phi_b$, generates a linear system from which the coefficients $a_i$ can be extracted.
+
+\subsubsection{A Schoof-Like Algorithm}
+
+The classical algorithm due to Schoof \cite{schoof85} looks at the action of the Frobenius on the torsion points of an Elliptic curve via division polynomials, whose roots are the $x$ co-ordinates of $\ell$-torsion points. Computing the Frobenius trace on this restricted subgroup gives the trace reduced modulo $\ell$, from which the Chinese Remainder Theorem can be used to reconstruct the trace once computed for sufficiently many $\ell$. In the Drinfeld setting, the analog of the $\ell$-torsion subgroup appears to have orders that are too large for efficient computation.
+
+Instead, we compute $a \bmod E_i$ for irreducible polynomials $E_1, \ldots, E_k \in \F_q[x]$ such that $\deg(E_1 \ldots E_k) > n/2$ and $\deg(E_i) \in O(\log n)$ for all $i \leq k$. If $q > n/2$, then it suffices to let $k = \frac{n}{2} + 1$ and $E_i = x - e_i$ for some $e_i \in \F_q$. Reducing equation \ref{charrank2} right modulo the image $\phi_{E_i}$ of an irreducible $E_i$, we obtain
+
+\begin{equation}\label{modchar}
+    \tau^{2n} \bmod \phi_{E_i} - \phi_{a \bmod E_i}\tau^n \bmod_{E_i} - \phi_{b \bmod E_i} = 0
+\end{equation}
+
+Let $d_i = \deg E_i$. Given $b \mod E_i$ and $\tau^n \bmod \phi_{E_i}$, we now only need to compute $\phi_{x^2}, \ldots, \phi_{x^{d_i -1}}$ to solve for $a$.  We use a companion matrix method to compute $\tau^n \bmod \phi_{E_i}$; for $\rho \in \sring_{2d_i}$, let $T(\rho) = \tau \rho \mod E_i$ denote left multiplication by $\tau$ right modulo $E_i$. Set $\mathbf{T}$ to be its $2d_i \times 2d_i$ companion matrix acting on coefficient vectors $\hat{\rho} \in \F_q^{2d_i} $ for $\rho \bmod \phi_{E_i}$, and let $\mathbf{T}^{i}$ denote entry-wise exponentiation by $q^i$. Then 
+
+\begin{equation}\label{companion}
+    \hat{\tau}^n = \mathbf{T}\mathbf{T}^{1} \mathbf{T}^{2} \ldots \mathbf{T}^{n-1}\hat{1}
+\end{equation}
+
+The cost of computing $\phi_{x^2}, \ldots, \phi_{x^{d_i -1}}$ and $\phi_{b \bmod E_i}$ is $(n\log^2q)^{1+o(1)}$ bit operations. Computing $\hat{\tau}^n$ via equation \ref{companion} takes $O(n\log n)$ modular compositions, resulting in a bit complexity of $(n^{2+\epsilon}\log q)^{1+o(1)}$. The overall runtime is then $(n^{2+\epsilon}\log q + n \log^2q)^{1+o(1)}$ 
+
+\subsubsection{Using Hankel Systems}
+
+From the definition of the minimal polynomial, $\phi_{a_1} = -\tau^{2n} - \phi_{a_0}$, set $\phi_{a_1} := \sum_{i=0}^{\lfloor n/2 \rfloor} c_i\phi_{x}^i$ and $r := -\tau^{2n} - \phi_{a_0}$. For a uniformly random choice of $\F_q$-linear projection $\ell : \L \to \F_q$, $\alpha \in \L$, and for any $j > 0$ we may evaluate both sides of the equation at $\alpha$ to obtain:
+
+%\begin{equation*}
+%    \sum_{i=0}^{\lfloor n/2 \rfloor} c_i\phi_{x}^i(\alpha) = r(\alpha)
+%\end{equation*}
+
+%For any $j > 0$, apply $\phi_x^j$ to the preceding expression
+
+\begin{equation*}
+    \sum_{i=0}^{\lfloor n/2 \rfloor} c_i\phi_{x}^{i +j}(\alpha) = \phi_x^jr(\alpha)
+\end{equation*}
+
+This yields the following $\nu \times \nu$ Hankel system over $\F_q$:
+
+\begin{equation*}
+    \begin{bmatrix}
+    \ell(\alpha) & \ldots & \ell(\phi_x^{\nu - 1}(\alpha)) \\
+    \ell(\phi_x(\alpha)) & \ldots & \ell(\phi_x^{\nu}(\alpha)) \\
+    \vdots & & \vdots \\
+    \ell(\phi_x^{\nu - 1}(\alpha) & \ldots & \ell(\phi_x^{2\nu - 2}(\alpha)
+    \end{bmatrix}
+    \begin{bmatrix}c_0 \\ \vdots \\ c_{\nu - 1} \end{bmatrix} = 
+    \begin{bmatrix} \ell (r(\alpha)) \\ \vdots \\ \ell(\phi_x^{\nu - 1}r(\alpha)) \end{bmatrix}
+\end{equation*}
+
+Let $\Gamma_{\ell, \alpha}$ denote the minimal polynomial of the sequence $\{ \ell (\phi_x^i(\alpha))\}$. The solution to the preceding system is unique and yields the coefficients of the minimal polynomial if and only if $\Gamma_{\ell, \alpha} = \Gamma$. Under a uniform choice of $\ell, \alpha$, a classical argument due to Wiedemann in \cite{Wiedemann:1986:SSL:13738.13744} can be used to lower bound $\textnormal{Pr}[\Gamma_{\ell, \alpha} = \Gamma]$, and use of the Schwartz-Zippel lemma allows for a lower bound of $1-2n/q$. If $n$ is even, we may not be able to determine $c_{\lfloor n/2 \rfloor}$, in which case we let $\nu = \lfloor n/2 \rfloor$ and compute $c_{\lfloor n/2 \rfloor}$ via the formula
+\begin{equation*}
+    c_{\lfloor n/2 \rfloor} = \textnormal{Tr}_{\F_{q^2}/\F_{q}}(\textnormal{N}_{\L/\F_{q^2}}(\Delta)^{-1})% \hspace{4mm} \cite{gekeler},
+\end{equation*}
+here $\F_{q^2}$ is a quadratic extension of $\F$ contained in $\L$, and $\textnormal{Tr}$ and $\textnormal{N}$ are the field trace and norm respectively. One can compute up to $2n$ elements of the sequence $\{ \ell (\phi_x^i(\alpha))\}$ using $(n^2 \log^2q)^{1 + o(1)}$ bit operations. $r(\alpha)$ and the resulting sequence $\ell(\phi_{x^i}(r(\alpha)))$ for $i \leq \nu -1$ can be computed using at most $(n^2 \log^2q)^{1 + o(1)}$ bit operations. Finally, the resulting Hankel system can be solved in $(n^2 \log q)^{1 + o(1)}$ bit operations, allowing for an overall runtime of $(n^2 \log^2q)^{1 + o(1)}$. 
+
+\subsection{Algorithms for Higher Ranks}
+
+
+The following approach is due to \cite{GaraiPapikian} and can be used when $\L = \F_{\frak{p}}$. Rewrite the expression for the minimal polynomial as $f_i' + f_i = 0$ where
+
+\[ f_i = \phi_{a_{r-i}}\tau^{n (r-i)} + \phi_{a_{r - i -1 }}\tau^{n (r-i-1)} + \ldots + \phi_{a_0} \]
+
+\[ f_i' = -\tau^{nr} + \phi_{a_{r -1 }}\tau^{n (r-1)} + \ldots + \phi_{a_{r-i + 1}}\tau^{n(r - i + 1)}. \]
+
+The term of skew degree $n(r - i + 1)$ in $f_i'$ is  $\gamma(a_{r-i+1}) \tau^{n(r-i + 1)}$; consequently each $\gamma(a_{r-i+1})$ can be computed by determining the $n(r - i + 1)$ skew-degree term of $f_i$.
+
+The bit-complexity of computing all of $\phi_x, \phi_{x^2}, \ldots, \phi_{x^n}$ is \newline
+$\Theta(r\log(r)n^3\log(q))$. Computing each $f_i$ is linear in the degree of the term being added, which is $O(rn)$, which is done for $O(r)$ iterations, so the overall cost is $O((r^2n + r\log(r)n^3)\log(q) )$.

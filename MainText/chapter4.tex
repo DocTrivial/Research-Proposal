@@ -1,0 +1,406 @@
+
+\chapter{Preliminary Results} \label{ch-1}
+
+\section{Minimal Subspace Polynomial and Multipoint Evaluation}
+
+An algorithm for multipoint evaluation was presented in \cite{musschost}. Without loss of generality we may suppose $\rho$ has skew-degree $d$ a perfect square and let $\delta = \sqrt{d}$. The target skew polynomial $\rho$ can be decomposed as $\rho = \rho_0 + \tau^{\delta} \rho_1 + \ldots + \tau^{\delta(\delta - 1)}\rho_{\delta-1}$ where each $\rho_i$ has skew-degree at most $\delta - 1$. Set $\rho_i = \rho_{i,0} + \rho_{i,1}\tau + \ldots + \rho_{i,\delta - 1} \tau^{\delta-1}$. For each $0 \leq i \leq \delta -1$ and $1 \leq j \leq s$ set $v_{i,j} = \sigma^i(v_j)$, and each $\rho_i(v_j) = \sum_{k=0}^{\delta - 1} \rho_{i,k}v_{k,j}$. Horner's scheme can then be used to compute $\rho(v_j) = \rho_0(v_j) + \tau^{\delta}(\rho_1(v_j) + \tau^{\delta}(\rho_2(v_j) + \ldots $.
+
+\begin{algorithm}
+\caption{Multipoint Evaluation \cite{musschost}}
+\label{alg:mpe2}
+\hspace*{\algorithmicindent} \textbf{Input} A skew polynomial $\rho \in \F_{q^n}\{\tau \}$ of degree $d$, and a set of linearly independent evaluation points $\{ v_1, \ldots, v_s \} \subset \F_{q^n}$.\\
+ \hspace*{\algorithmicindent} \textbf{Output} The set $\{ \rho(v_1), \ldots, \rho(v_s) \} \subset  \F_{q^n}$ \\
+ \begin{algorithmic}[1]
+  \State Compute $\rho_i = \rho_{i,0} + \rho_{i,1}\tau + \ldots + \rho_{i,\delta - 1} \tau^{\delta}$ such that $\rho = \rho_0 + \tau^{\delta} \rho_1 + \ldots + \tau^{\delta(\delta - 1)}\rho_{\delta-1}$
+  \State Compute $v_{i,j} = \sigma^i(v_j)$ for each $0 \leq i \leq \delta-1$ and $1 \leq j \leq s$
+  \State Compute the $\delta \times \delta$ and $\delta \times s$ matrix product:
+  $
+  \begin{bmatrix}
+  \rho_{0,0} & \ldots & \rho_{0, \delta - 1} \\ 
+  \vdots & & \vdots \\
+  \rho_{\delta - 1, 0} & \ldots & \rho_{\delta - 1, \delta - 1}
+  \end{bmatrix}\begin{bmatrix}
+  v_{0,0}  & \ldots & v_{0,s} \\ \vdots & & \vdots \\
+  v_{\delta - 1, 0} & \ldots & v_{\delta - 1, s}
+  \end{bmatrix} = \begin{bmatrix}
+  \rho_0(v_1) & \ldots & \rho_{0}(v_s) \\ 
+  \vdots & & \vdots \\
+  \rho_{\delta - 1}(v_1) & \ldots & \rho_{\delta - 1}(v_s)
+  \end{bmatrix}
+  $
+  
+  \State For $1 \leq j \leq s$ compute $\rho(v_j) = \rho_0(v_j) + \tau^{\delta}(\rho_1(v_j) + \tau^{\delta}(\rho_2(v_j) + \ldots $ via Horner's scheme
+ 
+\end{algorithmic}
+
+\end{algorithm}
+
+Steps 1, 2, and 3 take time equal to the cost of $O(d + d^{1/2}s )$ applications of Frobenius powers. The cost of step 3 is either $O(ds^{\omega - 2})$ field operations in $\L$ if $s < \sqrt{d}$, and $O(d^{(\omega-1)/2}s)$ $\L$-operations otherwise.  Counting the complexity of modular compositions, the overall bit complexity of the algorithm is either $(ds^{\omega - 2} n^{\theta} \log q)^{1 + o(1)}$ if $s < \sqrt{d}$, and $(d^{(\omega-1)/2}sn^{\theta} \log q)^{1 + o(1)}$ otherwise.
+
+Algorithm \ref{alg:mpe2} may then be leveraged as a subroutine for algorithm \ref{msp1}; the algebraic runtime of $\MSP(d)$ satisfies
+
+\begin{equation*}
+    \MSPr(d) = 2\MSPr(d/2) + O(d^{(\omega + 1)/2}).
+\end{equation*}
+
+Applying the master theorem, $\MSPr(d) = \Theta(d^{(\omega + 1)/2})$. In terms of bit complexity, we have $ \MSPr(d) = (d^{(\omega-1)/2}sn^{\theta} \log q)^{1 + o(1)}$.
+
+
+
+\section{Minimal Polynomials in Higher Ranks}
+
+
+\subsection{Schoof-like Algorithms}
+
+Our main results for this section is the following theorem.
+
+\begin{theorem}\label{schooflike}
+There exists a Monte Carlo algorithm such that when $\gcd(n,r) = 1$ or $r = 3$, then for a generic choice of rank $r$ Drinfeld module $\phi$ over a degree $n$ extension $\L$ of  $\F_q$, the algorithm computes the minimal polynomial of $\phi$ with bit complexity $r^{(\omega+3)/2}(n^2 \log q)^{1 + o(1)}$ and returns a correct result when $q > Cnr^2$, for some constant $C > 2$, with probability greater than $\frac{1}{2}$.
+\end{theorem}
+
+Recall the \textit{minimal polynomial} of $\phi$ is the unique monic polynomial $\Gamma = T^{d} - a_{d-1}T^{d-1} - \ldots - a_1T - a_0 \in \F_q[x][T]$ of least degree such that:
+
+\begin{equation} \label{charpoly1}
+ \tau^{nd} - \phi_{a_{d-1}}\tau^{n(d-1)} - \ldots - \phi_{a_1} \tau^n - \phi_{a_0} = 0
+\end{equation}
+
+
+The goal is to compute each $a_i$ modulo a set of polynomials which can then be used to reconstruct the true coefficients. This can be done over the right-quotient space $\L\{\tau \}/\phi_{x-e}$ since $\phi_{a \bmod b} \bmod \phi_b = \phi_a \bmod \phi_b$ for any $a, b \in \F_q[x]$. If $b = x - e$ for $e \in \F_q$, then in particular $a(c) = \phi_a \bmod \phi_b$. As in the rank 2 case, when $q \gg nr$, linear polynomials suffice and equation (\ref{charpoly1}) becomes
+
+\begin{equation}\label{linsys}
+\tau^{n\hatr} - a_{\hatr-1}(e)\tau^{n(\hatr-1)} - \ldots - a_1(e)\tau^n - a_0(e)  = 0 \mod \phi_{x - e}.
+\end{equation}
+
+$\L\{\tau \}/\phi_{x-e}$ is an $r$-dimensional vector space over $\L$ spanned by the computational basis $\{1, \tau, \ldots, \tau^{r-1}\}$, and let $\hat{\varphi}$ denote the column vector of $\varphi \in \L\{\tau \}/\phi_{x-e}$ in the computational basis. Writing (\ref{linsys}) as a linear system
+
+\begin{equation}\label{system1} \begin{bmatrix} \hat{\tau}^{n(\hatr-1)} & \ldots & \hat{\tau}^{n} \end{bmatrix} \begin{bmatrix} a_{\hatr-1}(e) \\ \vdots \\ a_1(e) \end{bmatrix} = \begin{bmatrix}  -a_0(e) \\ 0 \\ \vdots \\ 0  \end{bmatrix} + \hat{\tau}^{n\hatr}.
+\end{equation}
+
+Let $ B(\psi) = \begin{bmatrix} \hat{\tau}^{n(\hatr-1)} & \ldots & \hat{\tau}^{n} \end{bmatrix}$ for modulus $\psi \in \L\{\tau\}$. The well-determinedness of the system encoded by $B(\phi_{x-e})$ can be characterized using the following lemma.
+
+%Let $B_{\phi}^{n,j} := \begin{bmatrix} \tau^{n(j-1)} & \ldots & \tau^{n} \end{bmatrix} \bmod \phi_{x-e}$ be the $r \times (j -1)$ system encoding the coefficients of the $r$-dimensional vector $\tau^{ni} \mod \phi_{x -e}$ in the computational basis. The goal is to show the system given in $(\ref{system1})$ has a unique solution with high probability when $q \gg nr$ by applying the Schwartz-Zippel lemma to the polynomial in the coefficients of the Drinfeld module given by $\det B_{\phi}^{n,\hatr}$, where $B_{\phi}^{n,\hatr}$ is truncated to the first $\hatr - 1$ rows, as $\det B_{\phi}^{n,\hatr} \neq 0$ provides a sufficient condition for solvability.
+
+%Let $ \Delta_i = \sum_{j=0}^{n-1}\alpha_{i,j}x^j$ for $i > 0$ and $ (\gamma(x) - e) = \sum_{j=0}^{n-1}\alpha_{0,j}x^j$. The goal of the next lemma is to bound the degree 
+
+\begin{lemma}\label{detdeg}
+Suppose $Cn^2r < q$ for a constant $C>2$. Further suppose that there exists at least one skew-polynomial modulus $\psi$ of skew-degree $r$ such that the system in (\ref{system1}) is uniquely solvable. Then for choices of Drinfeld coefficients $\Delta_i$ and evaluation point $e$ except on an asymptotically vanishing set as $q \to \infty$, the system given in $(\ref{system1})$ is well-determined.
+\end{lemma}
+
+\begin{proof}
+We consider general skew-polynomial modulus $\psi = \sum_{i=0}^{r} \Lambda_i \tau^i$ for equation $(\ref{system1})$ rather than the special Drinfeld case of $\Lambda_0 = x - e$. We assume the case $n,d \geq 3$ we can set $\mu = n(\hatr - 1)$, $\reduc = \mu - r$, $\omega = \mu - n > 0$. We can characterize the linear independence of the set $\{\tau^{ni} \}_{i =1}^{\hatr} \bmod \psi$ as follows: suppose to the contrary that
+
+\begin{equation}\label{mult}
+    \sum_{i=1}^{\hatr - 1} \beta_i \tau^{ni} = P \psi
+\end{equation}
+
+with $P = \sum_{i= 1}^{\reduc} p_ix^i \in \L\{\tau \}$ and $P \neq 0 $. The choice of $P$ is constrained by the requirement that the coefficient of $\tau^{j}$ in the product is 0 if $n$ doesn't divide $j$. The linear system representing the product $P\psi$ can be encoded as an $ (\omega + 1) \times (\omega - r + 1)$ matrix $M$ over $\L$
+
+\begin{equation}
+    \label{productsystem}
+    \begin{bmatrix}
+    \Lambda_{r}^{q^{\reduc}} & 0 & 0 & \ldots & 0 & \ldots & 0 \\
+    \Lambda_{r - 1}^{q^{\reduc}} & \Lambda_{r}^{q^{\reduc - 1}} & 0 & \ldots & 0 & \ldots & 0 \\
+    \vdots & \vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+    \Lambda_{0}^{q^{\reduc}} & \Lambda_{1}^{q^{\reduc - 1}} & \Lambda_{2}^{q^{\reduc - 2}} & \ldots & \Lambda_{r}^{q^{\reduc - r}} & \ldots & 0 \\
+    0 & \Lambda_{0}^{q^{\reduc - 1}} & \Lambda_{1}^{q^{\reduc - 2}} & \ldots & \Lambda_{r-1}^{q^{\lambda - r}} & \ldots & 0 \\
+    \vdots & \vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+    0 & 0 & 0 & \ldots & 0 & \ldots & \Lambda_0^{q^{n}}
+    
+    
+    \end{bmatrix}
+    \begin{bmatrix}
+    p_{\reduc} \\ p_{\reduc - 1} \\ \vdots \\ p_{n}
+    \end{bmatrix}
+    = 
+    \begin{bmatrix}
+    \beta_{\hatr-1} \\ 0 \\ \vdots \\ 0 \\ \beta_{1}
+    \end{bmatrix}
+\end{equation}
+
+Deleting $\hatr - 1$ rows corresponding to the free parameters $\beta_i$ leaves the above as a well determined $ (\omega - \hatr + 2) \times (\omega - r + 1)$ linear system. 
+
+\begin{equation}
+    \label{reduced}
+    \begin{bmatrix}
+    \Lambda_{r - 1}^{q^{\reduc}} & \Lambda_{r}^{q^{\reduc - 1}} & 0 & \ldots & 0 & \ldots & 0 \\
+    \vdots & \vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+    \Lambda_{0}^{q^{\reduc}} & \Lambda_{1}^{q^{\reduc - 1}} & \Lambda_{2}^{q^{\reduc - 2}} & \ldots & \Lambda_{r}^{q^{\reduc - r}} & \ldots & 0 \\
+    0 & \Lambda_{0}^{q^{\reduc - 1}} & \Lambda_{1}^{q^{\reduc - 2}} & \ldots & \Lambda_{r-1}^{q^{\lambda - r}} & \ldots & 0 \\
+    \vdots & \vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+    
+    
+    \end{bmatrix}
+    \begin{bmatrix}
+    p_{\reduc} \\ p_{\reduc - 1} \\ \vdots \\ p_{n}
+    \end{bmatrix}
+    = 
+    \begin{bmatrix}
+    0 \\ 0 \\ \vdots \\ 0 \\ 0
+    \end{bmatrix}
+\end{equation}
+
+Deleting an additional $r - \hatr + 1$ rows, which can be chosen such that the resulting system derived from the modulus $\psi$ is invertible, and showing that for generic choices of Drinfeld module parameters the determinant of this resulting square matrix is non-zero is sufficient to establish $P = 0$. To that end, we ``vectorize" equation $(\ref{productsystem})$: fix an $\F_q$-basis of $\L$, under which elements $a \in \L$ can be represented by a length $n$ vector $\hat{a}$ with entries in $\F_q$ or by their $n\times n$ multiplication operator $\overline{a} \in \F_q^{n \times n}$. Moreover, let $\overline{\sigma}$ denote the $n\times n$ matrix of the Frobenius acting on vectors $\hat{a}$. This allows a rewriting of the truncated system $\overline{M}$
+
+\begin{equation}
+    \label{vectorsystem}
+    \begin{bmatrix}
+    \overline{\sigma}^{\lambda}\overline{\Lambda}_{r - 1} & \overline{\sigma}^{\lambda-1}\overline{\Lambda}_{r} & 0 & \ldots & 0 & \ldots & 0 \\
+    \vdots & \vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+    \overline{\sigma}^{\lambda}\overline{\Lambda}_{0} & \overline{\sigma}^{\lambda -1}\overline{\Lambda}_{1} & \overline{\sigma}^{\lambda - 2}\overline{\Lambda}_{2} & \ldots & \overline{\sigma}^{\lambda - r}\overline{\Lambda}_{r} & \ldots & 0 \\
+    0 & \overline{\sigma}^{\lambda - 1}\overline{\Lambda}_{0} & \overline{\sigma}^{\lambda - 2}\overline{\Lambda}_{1} & \ldots & \overline{\sigma}^{\lambda - r}\overline{\Lambda}_{r-1} & \ldots & 0 \\
+    \vdots & \vdots & \vdots & \ddots & \vdots & \ddots & \vdots 
+    
+    
+    \end{bmatrix}
+    \begin{bmatrix}
+    \hat{p}_{\reduc} \\ \hat{p}_{\reduc - 1} \\ \vdots \\ \hat{p}_{n}
+    \end{bmatrix}
+    = 
+    \begin{bmatrix}
+     \hat{0} \\ \vdots \\ \hat{0} 
+    \end{bmatrix}
+\end{equation}
+
+This system is parametrized by the $\F_q$-coefficients of $\Lambda_i = \sum_{j = 0}^{n-1} \alpha_{i,j}x^j$. The resulting vectorized system is an  $ n(\omega - r + 1) \times n(\omega - r + 1)$ matrix whose entries are degree 1 polynomials in the variables $\alpha_{i,j}$; therefore when the determinant is not exactly the zero polynomial in the $\alpha_{i,j}$, then it has degree $n(\omega - r + 1) = O(n^2r)$. This can't be the case since the system must be invertible for at least one choice of $\alpha_{i,j}$ corresponding to the choice of skew-polynomial $\psi$ for which a solution $z$ to $B(\psi)z = 0$ is uniquely determined. Applying the Schwartz-Zippel lemma to the determinant:
+
+%Set $\alpha_i = \frac{\Delta_i}{\Delta_r}$ with coefficients $\alpha_i := \sum_{j=0}^{n-1}\alpha_{i,j}x^j$. Furthermore, let $\overline{\alpha_i}$ be the $n\times n$ matrix of the action of left multiplication by $\alpha_i$ on $\L/\F_q$, and let $\overline{\tau}$ denote the matrix representation of the Frobenius. If $\sum_{i=0}^{r-1}c_i \tau^i$ is any skew polynomial, the action of left multiplication by $\tau$ on $\L[\tau]/\phi_{x-e}$ is given by the following matrices:
+
+%\begin{equation*}
+%M :=  \begin{bmatrix}\overline{\alpha}_{r-1} & I & 0 & \ldots & 0 \\ \overline{\alpha}_{r-2} & 0 & I & \ldots & 0 \\ \vdots & \vdots & \vdots & \ddots & \vdots \\ \overline{\alpha}_{0} & 0 & 0 & \ldots & I \end{bmatrix} \hspace{4mm} S := \begin{bmatrix} \overline{\tau} & & \\ & \ddots & \\ & & \overline{\tau} \end{bmatrix}
+%\end{equation*}
+
+%\begin{equation*}
+%\begin{bmatrix}\overline{\alpha}_{r-1} & I & 0 & \ldots & 0 \\ \overline{\alpha}_{r-2} & 0 & I & \ldots & 0 \\ \vdots & \vdots & \vdots & \ddots & \vdots \\ \overline{\alpha}_{0} & 0 & 0 & \ldots & I \end{bmatrix} \begin{bmatrix} \overline{\tau} & & \\ & \ddots & \\ & & \overline{\tau}\end{bmatrix} \begin{bmatrix} \overline{c}_{r-1} \\ \vdots \\ \overline{c}_{0} \end{bmatrix} = \begin{bmatrix} \overline{\alpha}_{r-1} \overline{\tau}(\overline{c}_{r-1}) + \overline{\tau}(\overline{c}_{r-2}) \\ \overline{\alpha}_{r-2} \overline{\tau} \overline{c}_{r-1} + \overline{\tau} \overline{c}_{r-3} \\ \vdots \\ \overline{\alpha}_{0} \overline{\tau}(\overline{c}_{r-1})  \end{bmatrix}
+%\end{equation*}
+
+%with each $\overline{c}_i \in \L$ being written as a size $n$ vector over $\mathbb{F}_q$. Then $\tau^{in} \mod \phi_{x-e}$ is given by 
+
+%\begin{equation*}
+%(MS)^{in-r} \begin{bmatrix} \overline{1} \\ 0 \\ \vdots \\ 0 \end{bmatrix}.
+%\end{equation*}
+
+%The entries of this expression have degree $in - r$ in the coefficients $\alpha_{i,j}$, and the total degree of any term in the square determinant is $2\sum_{i=1}^{r-1} (in - r) \leq 2nr^2$.
+
+\begin{equation*}
+    \Pr\Big[\det \overline{M} = 0\Big] \leq \frac{n^2r}{q} < \frac{1}{C}.
+\end{equation*}
+
+\end{proof}
+
+%If $\sqdet B_{\psi}^{n,r} \neq 0 $, then for generic choices of base field element $e$ and coefficients of $\phi_x$, the Schwartz-Zippel lemma implies
+
+% $\{\alpha_{i,j}\}_{1 \leq i \leq r-1}^{0 \leq j \leq n-1}$, the Schwartz-Zippel lemma implies
+
+
+
+The remainder of the proof of Theorem 1 is classifying pairs of parameters $n,r$ for which there exists at least one choice of modulus $\psi \in \sring$ that guarantees unique solvability of $B(\psi)$
+
+\begin{prop}\label{coprime}
+Suppose $\gcd(n,r) = 1$. There exists a Drinfeld module $\phi_x$ such that $ B(\phi_x)$ is uniquely solvable.  %e $\psi = \tau^n - 1$.
+\end{prop}
+\begin{proof}
+Let $\phi_x = \tau^r - \gamma(x)$. For any $e \neq -\gamma(x)$, $\tau^{ni} = (\gamma(x) + e)^{\lfloor ni/r \rfloor} \tau^{ni \bmod r} \bmod \phi_{x} - e$. Since $\gcd(n,r) = 1$, the set $\{ n \bmod r, 2n \bmod r, \ldots, rn \bmod r\}$ is a reordering of $\{0, 1, \ldots, r-1\}$ and so the elements $\tau^{ni}$ form an $\L$ basis of $\L\{ \tau\}/\phi_{x - e}$.
+\end{proof}
+
+
+
+\begin{prop}\label{rank3}
+If $r = 3$, then for any $n$ there exists a skew-polynomial $\psi \in \L\{\tau\}$ such that $B(\psi)$ is uniquely solvable.
+\end{prop}
+\begin{proof}
+For a contradiction, let $\psi$ be any skew polynomial. The notion of an \textit{Azumaya algebra} and their connection to skew polynomials was previously studied in \cite{Ikehata1984AzumayaAA} and \cite{skewfactor}. In particular, we are interested in a distinguished map sending an Azumaya algebra to its center, the \textit{reduced norm}, which induces a map $\cN: \L\{\tau\} \to \comm$ while satisfying the following constraints.
+
+\begin{enumerate}
+    \item $\cN(\psi_1 \psi_2) = \cN(\psi_1) \cN(\psi_2)$
+    \item $\deg_{\tau^n} \cN(\psi) \leq n \deg_{\tau} \psi$
+    \item $\cN(\psi) = \psi^n$ if $\psi \in \L[\tau^n]$
+    \item $\psi$ is irreducible in $\sring$ if and only if $\cN(\psi)$ is irreducible in $\F_q[\tau^n]$
+\end{enumerate}
+
+For details on the construction of the map and the proof of item (4) we refer to \cite[Prop. 2.1.17]{skewfactor}. Suppose $\tau^{2n} - \lambda \tau^n = 0$ for some $\lambda \in \F_q$. Then $\tau^{n} - \lambda = 0 \mod \psi$, and we must have a skew polynomial $D$ such that $\tau^n - \lambda = D \psi$. Taking reduced norms of both sides leads to
+
+\begin{equation*}
+(\tau^n - \lambda)^n = \cN(D)\cN(\psi)
+\end{equation*}
+
+The number of irreducible skew-polynomials of any degree was partly characterized in \cite{odoni_1999}, and in particular they exist for any skew degree. If we choose $\psi$ to be any degree 3 skew polynomial irreducible in $\L\{\tau \}$, item (4) implies $\cN(\psi)$ is an irreducible central skew-polynomial dividing $(\tau^n - \lambda)^n$ and so $\deg_{\tau}\cN(\psi) = n$. But we must then have $n^2 = \deg_{\tau} \cN(D) + \deg_{\tau} \cN(\psi) \leq (n-3)n + n = n^2 - 2n < n^2$, giving a contradiction.
+
+\end{proof}
+
+\subsection{Limitations}
+
+One of the clearest limitations of this approach is the large base field requirement $q > Cn^2 r$. Unlike the case $r = 2$, working with arbitrary degree irreducibles in $\F_q[x]$ in place of degree 1 polynomials does not appear to repair the issues discussed in lemma (\ref{detdeg}).
+
+Lemma (\ref{detdeg}) also appears limited to only the parameter cases given in propositions (\ref{coprime}) and (\ref{rank3}). As will be seen in the following example, there exist parameter choices for $n, r,$ and Drinfeld module $\phi_x$ outside these cases where the algorithm will never work.
+
+\begin{example}\label{examplefail}
+Let $n = 3$, $r =3$, $\phi_x = \tau^3 + x$. For $(\ref{system1})$ to be uniquely solvable for some $e$, whenever $\alpha_1 \tau^3 + \alpha_2 \tau^6 = P (\tau^3 + x - e)$ we must have $P = 0$. However for any $e$ setting $\alpha_1 = 1$, $\alpha_2 = x - e $ has the non-zero solution $P = \tau^3$.  
+\end{example}
+
+It is possible to detect failure cases such as those in the preceding example by checking dimensionality of the kernel of the linear system in $(\ref{reduced})$.  
+
+
+
+\subsection{Complexity.}
+
+The algorithm can be summarized with the following routine:
+
+%\textit{Subroutine 1}
+\begin{algorithm}[H]\label{schoof}
+\caption{Pseudocode for Schoof-like algorithm}
+\begin{enumerate}
+    \item Compute $\tau^{ni} \mod \phi_{x-e}$ in the computational basis for $\lfloor\frac{r-1}{r}n \rfloor$ distinct $e \in \F_q$ and $1 \leq i \leq r$
+    \item Solve the $r \times (\hatr-1)$ system given in (\ref{system1}) for each choice of $e$. If the system $B(\phi_{x-e})$ is uniquely solvable, apply a uniformly random projection $\ell : \L \to \F_q$ to the system and solve the system over $\F_q$.
+    \item Interpolate $\{a_i\}_{i=1}^{\hatr-1}$ using the $\lfloor\frac{r-1}{r}n \rfloor$ evaluation points $\{a_i(e)\}_{i=1}^{r-1}$ computed in step (2). 
+    \end{enumerate}
+\end{algorithm}
+
+The bottleneck of subroutine 1 is step (1). Algorithms for skew-polynomial multiplication can be leveraged to compute the entire collection of $\tau^{ni} \mod \phi_{x - e}$ in $r^{(\omega+3)/2}(n \log q)^{1 + o(1)}$ bit operations for a single $e$, with an overall contribution to the algorithm of $r^{(\omega+3)/2}(n^2 \log q)^{1 + o(1)}$. Step (2) adds $r^{\omega}n\log q$ bit operations, and (3) is of negligible cost. 
+
+A generic choice of projection $\ell$ will preserve unique solvability of $B(\phi_{x-e})$ with probability at least $1 - \frac{\hatr}{q} \geq 1 - \frac{1}{Cn^2} $. This holds for $O(n)$ independent choices of projection with probability at least $(1 - \frac{1}{Cn^2})^n \to e^{-1/(C)} \to 1$ for large $n, C$. The remaining probabilistic element is the likelihood of genericity for the choice of Drinfeld module, base field element pair $(\phi, e)$ for $n$ choices of $e$, which happens with probability $(1 - \frac{1}{Cn})^{n}$ and which can be made arbitrarily close to 1. This completes the argument for Theorem 1.
+
+When working with the prime field case $n = m$ or when $\gcd(r, s) = 1$, the minimal polynomial is known to have degree $r$ and the routine need only be invoked once. For the general case, including parameter choices not covered by theorem \ref{schooflike}, we speculate it may be possible to invoke the algorithm for choices of $\hat{d}$ such that $r = \hat{d} r'$ with $r' | s$ and invoking probabilistic polynomial testing to verify that the output for a given $\hat{d}$ is in fact an annihilating polynomial for $\tau^n$; taking the polynomial corresponding to the least such $\hat{d}$.
+
+%\begin{enumerate}
+%    \item Initialize $r_{upper} \leftarrow r$, $r_{lower} \leftarrow 1$.
+%    \item If $r_{upper} = r_{lower}$, return $r_{upper}$. Otherwise set $\hatr \leftarrow \frac{r_{upper} + r_{lower}}{2}$.
+%    \item Run Subroutine 1 on the estimate $\hatr$.
+%    \item If the system in (\ref{system1}) is inconsistent, $r_{lower} \leftarrow \hatr$ and go to step 2.
+%    \item If the system in (\ref{system1}) returns a solution, use polynomial identity testing to determine if $\tau^{n \hatr} - \sum_{i = 0}^{\hatr - 1} \phi_{a_i}\tau^{ni} = 0$. If this equation holds, set $r_{upper} \leftarrow \hatr$, otherwise $r_{lower} \leftarrow \hatr$. Go to step 2.
+    
+%\end{enumerate}
+
+
+
+
+
+\subsection{From Hankel Systems}
+Inspired by the Monte Carlo Algorithm given in $\cite{musschost}$, we will propose an additional algorithm which doesn't depend on the genericity of the chosen Drinfeld module required by the Zippel-Schwartz criteria, and therefore may be usable when the algorithm of theorem \ref{schooflike} fails, and possesses a similar complexity.
+\begin{theorem}\label{hankel}
+Let $\phi$ be a rank $r$ Drinfeld module over a degree $n$ extension $L/\F_q$ such that $\gcd(n, r) = 1$. There is a Monte-Carlo algorithm computing the minimal polynomial of $\phi_x$ with bit complexity $(r^{3}n^2 \log q)^{1+o(1)}$ and which returns a correct result with probability greater than $\frac{1}{2}$ .
+\end{theorem}
+
+Note that given any algorithm achieving a probability of success greater than $\frac{1}{2}$, another algorithm that succeeds with probability $\frac{1}{2} < p < 1$ for any $p$ can be constructed with the same complexity as the original algorithm. We can organize the characteristic equation into a Hankel system.
+
+\begin{align*}
+\sum_{i=1}^{r - 1} \phi_{a_i}\tau^{ni} = &  \tau^{nr} - \phi_{a_0}
+%\end{equation*}
+%\begin{equation}
+%\label{chareq}
+\\
+\sum_{i=1}^{r - 1} \sum_{j=0}^{n(r-i)/r}a_{i,j}\phi_{x}^j\tau^{ni} = & \tau^{nr} - \phi_{a_0}
+\end{align*}
+
+With $a_{i,j} \in \F_q$, and with $a_0$ determined via $(\ref{norm})$. For integers $u, v > 0$, consider the operator Hankel blocks
+\begin{align*}
+H_{u,v} = & \begin{bmatrix}
+\phi_x^u\tau^{n} & \phi_x^u\tau^{2n} & \ldots & \phi_x^u\tau^{n (r - 1 - \lfloor(ur/n) \rfloor)} \\
+\phi_x^u\tau^{2n} & \phi_x^u\tau^{3n} & \ldots & \phi_x^u\tau^{(1 + r - 1 - \lfloor(ur/n) \rfloor)n} \\ \vdots & \vdots & \ddots & \vdots \\ \phi_x^u\tau^{vn} & \phi_x^u\tau^{(1+v)n} & \ldots & \phi_x^u\tau^{(v +  r - 1 - \lfloor(ur/n) \rfloor) n}
+\end{bmatrix}
+\\
+%\end{equation*}
+%\begin{equation*}
+    G_{v} = &\begin{bmatrix}
+    \tau^{nr} - \phi_{a_0} & \tau^{n(r+1)} - \phi_{a_0}\tau^n & \ldots \tau^{n(r+v -1)} - \phi_{a_0}\tau^{n(v-1)}
+    \end{bmatrix}^T
+\end{align*}
+
+Define
+\begin{align*}
+%\begin{equation*}
+H:= & \begin{bmatrix}
+H_{0,v_1} & H_{1, v_1} & \ldots & H_{\lfloor n (r- 1)/r \rfloor, v_1} \\ \vdots & \vdots & \ddots & \vdots \\ H_{0,v_k} & H_{1, v_k} & \ldots & H_{\lfloor n (r-1)/r \rfloor, v_k}
+\end{bmatrix}\\
+G:= & \begin{bmatrix}
+G_{v_1} \\ \vdots \\ G_{v_k}
+\end{bmatrix}
+%\end{equation*}
+\end{align*}
+
+We then obtain the system
+
+\begin{equation*}
+H
+\begin{bmatrix}
+a_{1,0} \\ a_{2,0} \\ \vdots \\ a_{1,1} \\ a_{2,1} \\ \vdots \\ a_{1, \lfloor n (r-1)/r \rfloor}
+\end{bmatrix} = G
+\end{equation*}
+
+In general, non-trivial relations between the linear maps $\phi_x^i\tau^{jn}$ acting on $\L$ ensure that the space of solutions has dimension larger than 0. To eliminate these relations, we lift to an extension $\K$ over $\L$. Let $H_{i, j}(\alpha_{\ell})$ denote the entry-wise evaluation of $H_{i, j}$ at $\alpha_{\ell}$. The goal is to choose a set of evaluation points $\alpha_1, \ldots, \alpha_k \in K$ such that the over-determined
+
+\begin{equation*}
+    H(\alpha_1, \ldots, \alpha_k) := \begin{bmatrix}
+H_{0,v_1}(\alpha_1) & H_{1, v_1}(\alpha_1) & \ldots & H_{\lfloor n (r-1)/r \rfloor, v_1}(\alpha_1) \\ \vdots & \vdots & \ddots & \vdots \\ H_{0,v_k}(\alpha_k) & H_{1, v_k}(\alpha_k) & \ldots & H_{\lfloor n (r-1)/r\rfloor, v_k}(\alpha_k)
+\end{bmatrix}
+\end{equation*}
+
+has a well-determined solution. Note that $H$ is an $ (v_1 + \ldots + v_k) \times \bigg( \sum_{i=1}^{n(r-1)/r} r - 1 - \lfloor(i r/n) \rfloor \bigg)$ system, and that the number of columns is a most $nr$. Let $v_1 = v_2 = \ldots = v_k = r$, $k = n$, and $[\K:\L] = r$. So $[\K:\F_q] = nr$, and observe that if the following two conditions are satisfied:
+
+\begin{enumerate}
+    \item The linear maps $\phi_x^{u}\tau^{ni}$ on $K$ are independent for $1 \leq i \leq r-1$ and $0 \leq u \leq  \frac{r-i}{r} n < n$ 
+    \item The set $B = \{\alpha_1, \tau^n(\alpha_1), \ldots , \tau^{n(r - 1)}(\alpha_1), \ldots , \alpha_k, \tau^n(\alpha_k), \ldots , $
+    $\tau^{n(r - 1)}(\alpha_k) \}$ is a basis for $K/\F_q$
+\end{enumerate} 
+
+Then the equation $H(\alpha_1, \ldots, \alpha_{n})z = G$ must have a unique solution, corresponding to the coefficients of the minimal polynomial of $phi_x$. The following lemma summarizes the core of this argument.
+
+\begin{lemma}\label{charindlem}
+Let $F/G$ be a finite field extension with $[F:G] = m$ and fix a basis $\alpha_1, \ldots, \alpha_m$ for $F$ over $G$. Let $\sigma_1, \ldots, \sigma_m$ be independent linear maps over $F$, fixing $G$. Then the following matrix is has no non-trivial solutions
+
+\begin{equation*}
+ \begin{bmatrix}
+\sigma_1(\alpha_1) & \ldots & \sigma_m(\alpha_1) \\ \vdots & & \vdots \\ \sigma_1(\alpha_m) & \ldots & \sigma_m(\alpha_m) 
+\end{bmatrix}   
+\end{equation*}
+
+
+\end{lemma}
+\begin{proof}
+Suppose there exist $\Lambda = \begin{bmatrix} \lambda_1 &  \ldots & \lambda_m \end{bmatrix}^T \in F^m$ with not all $\lambda_i = 0$ such that
+
+\begin{equation*}
+ \begin{bmatrix}
+\sigma_1(\alpha_1) & \ldots & \sigma_m(\alpha_1) \\ \vdots & & \vdots \\ \sigma_1(\alpha_m) & \ldots & \sigma_m(\alpha_m) \end{bmatrix} \begin{bmatrix} \lambda_1 \\ \vdots \\ \lambda_m \end{bmatrix} = \begin{bmatrix}
+0 \\ \vdots \\ 0
+\end{bmatrix}
+\end{equation*}
+
+Then for any row-wise re-scaling with $\ell_1, \ldots, \ell_m \in G$ we must also have
+
+\begin{equation*}
+ \begin{bmatrix}
+\ell_1\sigma_1(\alpha_1) & \ldots & \ell_1\sigma_m(\alpha_1) \\ \vdots & & \vdots \\ \ell_m\sigma_1(\alpha_m) & \ldots & \ell_m\sigma_m(\alpha_m) \end{bmatrix} \begin{bmatrix} \lambda_1 \\ \vdots \\ \lambda_m \end{bmatrix} = \begin{bmatrix}
+0 \\ \vdots \\ 0
+\end{bmatrix}
+\end{equation*}
+
+We multiply out the left-hand side and sum the rows to obtain
+
+\begin{equation}\label{violation}
+    \sum_{i=1}^m\sum_{j=1}^m\ell_i\lambda_j\sigma_j(\alpha_i) = \sum_{j=1}^m\lambda_j\sigma_j\bigg(\sum_{i=1}^m\ell_i\alpha_i\bigg)  = 0
+\end{equation}
+
+Observe now that (\ref{violation}) holds for any $\ell_1, \ldots, \ell_m $, violating linear independence.
+
+\end{proof}
+
+From Lemma (\ref{charindlem}), demonstrating that the system $H(\alpha_1, \ldots, \alpha_{n})z = G$ can be uniquely solved for the coefficients of the minimal polynomial of $\phi_x$ reduces to establishing the linear independence of $\phi_x^{u}\tau^{ni}$ over $\K$.  If $\gcd(n,r) = 1$, the degree of the lead term of $\phi_x^u = C\tau^{ru} + \ldots$ has a unique residue modulo $n$ for distinct choices of $u$, and so independence of $\{ \phi_x^{u}\tau^{ni} \}_{0 \leq u \leq n(r-i)/r }^{1 \leq i < r}$ follows from independence of $id, \tau, \tau^2, \ldots, \tau^{nr-1}$. The values $\alpha_1, \ldots, \alpha_r$ can be constructed from a normal basis for $K/\F_q$ by selecting $\alpha_i = \alpha^{q^i}$ for $0 \leq i \leq r - 1$.
+
+\subsection{Complexity.} Summarizing the preceding results, we have the following procedure:
+
+\begin{algorithm}[H]\label{hankel}
+\caption{Computing the Minimal Polynomial via a Hankel System }
+
+\begin{enumerate}
+    \item Fix a degree $r$ extension $K$ of $L$ and a normal basis for $K$ over $\F_q$
+    \item Compute the Hankel Blocks $H_{i,r}(\alpha_j)$ as well as the right-hand blocks $G_r(\alpha_j)$
+    \item Fix a random projection $\ell: K \to \F_q$ and apply it to the entries of $H, G$
+    \item Solve the resulting $O(nr) \times nr$ system over $\F_q$.
+\end{enumerate}
+\end{algorithm}
+Determining a normal basis of size $nr$ of $K/\F_q$ can be done in sub-quadratic time in the degree of the extension. Constructing the Hankel system above involves computing $\phi_x^{u}\tau^{ni}(\alpha_j)$ for $O(nr^2)$ choices of $0 \leq u < \frac{r-1}{r}n, 1 \leq i \leq r, 0 \leq j \leq r$. The applications of $\tau$ can be applied for $O(1)$ cost on the normal basis, while applications of $\phi_x$ take $O(nr \log q)$ bit operations. The total bit complexity for the entire procedure to compute the block Hankel system is $O(n^2r^3\log q)$. We may again apply the uniformly selected linear projection $\ell$ at an additional cost of $O(n^2r^3\log q)$. Constructing the normal basis and solving the resulting $nr \times nr$ Hankel system consisting of $n$ block columns and $r$ block rows can be done in at most $O(n^2r^2\log q)$.
+
+\subsection{Comparison and Limitations}
+
+Unlike in the Schoof-like case, there is no dependence on the genericity of the choice of Drinfeld module; the algorithm only fails to return a result when a poor choice of projection is made. For cases other than $\gcd(n,r) = 1$, lemma (\ref{charindlem}) can be applied by directly by testing the linear independence of characters $\{ \phi_x^{u}\tau^{ni} \}_{0 \leq u \leq n(r-i)/r }^{1 \leq i < r}$, which can be done probabilistically using polynomial identity testing. 
+
