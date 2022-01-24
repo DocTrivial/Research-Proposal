@@ -45,6 +45,22 @@ Algorithm \ref{alg:mpe2} may then be leveraged as a subroutine for algorithm \re
 
 Applying the master theorem, $\MSPr(d) = \Theta(d^{(\omega + 1)/2})$. In terms of bit complexity, we have $ \MSPr(d) = (d^{(\omega-1)/2}sn^{\theta} \log q)^{1 + o(1)}$.
 
+\section{Narayanan's Algorithm for Rank-two Drinfeld Modules}
+
+We propose an amendment to an additional algorithm for finding the characteristic polynomial of a rank-two Drinfeld module based on an approach originally due to Narayanan in \cite{Narayanan18} and later modified in \cite{musschost}. Recall that in the rank-two case, the characteristic polynomial of $\phi$ takes the form $X^2 - aX - b$. Moreover, since $\tau^{2n} - \phi_a\tau^n - \phi_b = \id - a(\phi_x) - b(\phi_x) = 0$, the polynomial $1 - a - b$ is an annihilator of $\phi_x$; in fact it is the characteristic polynomial of $\phi_x = \Delta_2 \tau^2 + \Delta_1 \tau + \gamma(x)$ \cite{GEKELE1991187}. If the minimal polynomial $\Gamma$ of $\phi_x$ coincides with the characteristic polynomial,then we can once again resort to a Wiedemann style argument: in this case, it suffices to compute the minimal polynomial $\Gamma_{\ell, \alpha}$ of a sequence $\{r_i\} = \{\ell(\phi_x^i(\alpha)) \}$ for a uniformly random $\alpha \in \L$ and $\F_q$-linear map $\ell: \L \to \F_q$ and argue that with probability greater than $\frac{1}{2}$ we have $\Gamma_{\ell, \alpha} = \Gamma$. In his original proposal, Narayanan used the automorphism projection algorithm of Kedlaya and Umans to compute $2n$ terms of the sequence $\{ r_i \}$, whereas it is unclear to us whether this approach and its complexity bound extends to the case where $\phi_x$ is not an automorphism of $\L$. 
+
+Instead, we propose the following alternative approach based on a ``block Wiedemann" style algorithm \cite{Coppersmith94}. For some positive integer $\mu$, pick $\mu$ many $\F_q$-linear maps $\ell_1, \ldots, \ell_{\mu}$ as before and $\mu$ elements $\alpha_i \in \L$. Construct a sequence of $\mu \times \mu$ matrices $R_{k}$ such that the $(i,j)^{th}$ entry of $R_k$ is $ \ell_i(\phi_x^k(\alpha_j))$. The generating series of this sequence can be expressed as a product of the form $Q^{-1}N$ for  $\mu \times \mu$ matrices matrices $Q,N$ taking coefficients in $\F_q[x]$ and with the entries of $Q$ having degree at most $\lceil n/\mu \rceil$. Computing $Q$ can be accomplished by first determining $2n/\mu$ matrices $R_k$ and using the PM basis algorithm given in \cite{GiJeVi03} in $(\mu^{\omega - 1}n\log q)^{1 + o(1)}$ bit operations. Fix additional constants $\frak{b}$and set $K = \lfloor (n/2\mu)^{\frak{b}} \rfloor$, $K' = \lceil n/2\mu K \rceil$. To compute the $R_k$, we turn to the following procedure:
+
+\begin{enumerate}
+    \item Compute the $\F_q$-linear maps $\ell_{i, \frak{s}} =  \phi_x^{\frak{s}}(\ell_i)$ for $i \leq \mu$ and $\frak{s} < K$.
+    \item Compute $\phi_x^{K}$ and for $j \leq \mu$ and $\frak{t} \leq K'$ compute $\alpha_{\frak{t}, j} = \phi_x^{\frak{t}K}(\alpha_j)$.
+    \item Let $L$ be the $K\mu \times n$ matrix whose rows correspond to the linear map $\ell_{i, \frak{s}}$, and $A$ the $n \times K'\mu$ matrix whose columns correspond to $\alpha_{\frak{t}, j}$. The entries of the matrix product $LA$ are exactly $\ell_i(\phi_x^{\frak{s} + \frak{t}K}(\alpha_j))$ for all $i,j \leq \mu$, $\frak{s} < K$, $\frak{t} < K'$. 
+\end{enumerate}
+
+For well chosen $\mu, \frak{b}$, the procedure outlined above computes all entries of $R_k$ for $k \leq 2n/\mu$ in at most $(n^{1.885} \log q)^{1 + o(1)}$. 
+
+%Fix constants, $\mu$, $\frak{w}, \frak{v}$.
+
 
 
 \section{Minimal Polynomials in Higher Ranks}

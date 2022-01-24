@@ -64,7 +64,7 @@ Namely, the above proposition reduces computing the action of $a$ on a normal ba
 
 \begin{enumerate}
     \item Compute $c(T) = a(T) b(T)$, $c'(T) = a'(T)b(T)$.
-    \item Extract from $c,c'$ the matrices $M,M'$ respectively for the action of $a, a'$ on $\L/\F_q$ where the domain uses the normal basis and the codomain uses the standard basis.
+    \item Extract from $c,c'$ the matrices $M,M'$ respectively for the action of $a, a'$ on $\L/\F_q$ where the domain uses the normal basis and the co-domain uses the standard basis.
     \item Compute $M B M'$ where $B$ is the change of basis matrix from the standard basis to the normal basis. This gives the action of the product $aa'$ on $\L/\F_q$.
     \item Given the product $MBM'$ compute the corresponding $\hat{c}(T)$ such that $\hat{c}b^{-1}(T) = a(T)a'(T)$ and extract the coefficients of $aa'$
 \end{enumerate}
@@ -79,7 +79,7 @@ The ring $\sring$ is a right and left Euclidean domain and therefore admits a no
 Given skew-polynomials $a, b$, compute skew-polynomials $\omega, \rho$ such that $\skewdeg(\rho) < \skewdeg(b)$ and $a = \omega b + \rho$. In this case we write $\RED(a, b) = (\omega, \rho)$. 
 \end{problem}
 
-Elementary division problems concerning skew polynomials were first studied in $\cite{ore}$, with the first thorough algorithmic treatment, including the first non-trivial factorization scheme for skew polynomials, given in \cite{GIESBRECHT1998463}. In \cite{CaLe17} an algorithm for right Euclidean division of a degree $d_1$ skew polynomial by a degree $d_2$ skew polynomial with complexity in $\tilde{O}(\SM(d_1))$. The procedure is based on a classical algorithm for Euclidean division on commutative polynomials seen in \cite{Gathen:2003:MCA:945759}. 
+Elementary division problems concerning skew polynomials were first studied in $\cite{ore}$, with the first thorough algorithmic treatment, including the first non-trivial factorization scheme for skew polynomials, given in \cite{GIESBRECHT1998463}. In \cite{CaLe17} an algorithm for right Euclidean division of a degree $d_1$ skew polynomial $a$ by a degree $d_2$ skew polynomial $b$ with complexity in $\tilde{O}(\SM(d_1))$. The procedure is based on a classical algorithm for Euclidean division on commutative polynomials seen in \cite{Gathen:2003:MCA:945759}. 
 
 Define the pseudo-inversion operator of order $\delta$ on $\sring_{\delta}$:
 
@@ -87,7 +87,7 @@ Define the pseudo-inversion operator of order $\delta$ on $\sring_{\delta}$:
     T_{\delta}\bigg(\sum_{i=0}^{\delta} a_i \tau^i \bigg) = \sum_{i=0}^{\delta} a_{\delta - i} \tau^{-i}
 \end{equation}
 
-For a skew polynomial $\rho = \sum_{j=0}^{d}\rho_j\tau^j$, let $\rho^{(i)} = \sum_{j=0}^{d}\sigma^i(\rho_j)\tau^j$. It is fairly straightforward to check that $T_{\delta}$ is linear and satisfies the relation $T_{\delta_1 + \delta_2}(ab) = T_{\delta_1}(a)T_{\delta_2}(b^{(\delta_1)})$.
+For a skew polynomial $\rho = \sum_{j=0}^{d}\rho_j\tau^j$, let $\rho^{(i)} = \sum_{j=0}^{d}\sigma^i(\rho_j)\tau^j$. It is fairly straightforward to check that $T_{\delta}$ is linear and satisfies the relation $T_{d_1 + d_2}(ab) = T_{d_1}(a)T_{d_2}(b^{(\delta_1)})$. Let $\overline{\omega} = \sum_{i=0}^{\infty} \overline{\omega}_i\tau^i$ be such that $\overline{\omega}T_{d_2}(b^{d_1 - d_2}) = 1$. From the preceding product formula, we have that $T_{d_1}(a) = T_{d_1 - d_2}(\omega)T_{d_2}(b) + T_{d_1}(\rho)$. Let $\overline{\omega}^{[d_1 - d_2]} = \sum_{i=0}^{d_1 - d_2 - 1} \overline{\omega}_i\tau^i$; and observe that $T_{d_1}(a)\overline{\omega}^{[d_1 - d_2]} b - T_{d_1}(a)$ must have degree at least $d_1 - d_2$, implying that $T_{d_1 - d_2}(\rho) = T_{d_1}(a)\overline{\omega}^{[d_1 - d_2]} b - T_{d_1}(a)$. We can compute $\overline{\omega}^{[d_1 - d_2]}$ using Newton iteration in $O(\log d_1)$ steps, each of which has cost at most $O(M(d_1))$.
 
 
 \subsection{Minimal Subspace Polynomial \& Multipoint Evaluation}
@@ -171,13 +171,13 @@ Using the master theorem, this yields a complexity of $C(d) = O(d^{\max(\log_2(3
 
 \section{Drinfeld Modules}
 
-We begin with the ring of regular maps $\F_q[x]$ and fix a map $\gamma : \F_q[x] \to \L$. Then a \textit{Drinfeld Module} over $(\L, \gamma)$ is a ring homomorphism $\phi: \F_q[x] \to \L\{\tau \}$ such that
+We begin with the ring of regular maps $\F_q[x]$ and a map $\gamma : \F_q[x] \to \L$. Moreover let $\frakp$ denote the monic irreducible polynomial of degree $m$ generating the kernel of $\gamma$, and let $\F_{\frakp} = \F_q[x]/(\frakp)$. Then a \textit{Drinfeld Module} over $(\L, \gamma)$ is a ring homomorphism $\phi: \F_q[x] \to \L\{\tau \}$ such that
 
 \begin{equation*}
     \phi(a) = \sum_{i=1}^{d}c_i\tau^i + \gamma(a)
 \end{equation*}
 
-Keeping with the literature, we will often use the notation $\phi_a = \phi(a)$. A Drinfeld module may be specified by its action on $x$, and thus we may refer to a Drinfeld module by specifying the $r$ coefficients $(\Delta_r, \ldots, \Delta_1)$ such that $\Delta_r \neq 0$ and $\phi_x = \sum_{i=1}^{r}\Delta_i \tau^i + \gamma(x)$. The integer $r$ is referred to as the \textit{rank} of the Drinfeld module. A morphism from a Drinfeld module $\phi$ to $\psi$ is an element $u \in \L\{ \tau\}$  such that $u \phi_a = \psi_a u$ for all $u \in \F_q[x]$. The absolute Frobenius map is the element $\tau^n \in \L\{ \tau^n \}$. The minimal polynomial of the Frobenius element is the monic polynomial $M_{\phi}(X) = X^d - \sum_{i=0}^{d-1} a_iX^i \in \F_q[x][X]$ of least degree such that 
+Keeping with the literature, we will often use the notation $\phi_a = \phi(a)$. A Drinfeld module may be specified by its action on $x$, and thus we may refer to a Drinfeld module by specifying the $r$ coefficients $(\Delta_r, \ldots, \Delta_1)$ such that $\Delta_r \neq 0$ and $\phi_x = \sum_{i=1}^{r}\Delta_i \tau^i + \gamma(x)$. The integer $r$ is referred to as the \textit{rank} of the Drinfeld module. A morphism from a Drinfeld module $\phi$ to $\psi$ is an element $u \in \L\{ \tau\}$  such that $u \phi_a = \psi_a u$ for all $u \in \F_q[x]$. The absolute Frobenius map is the element $\tau^n \in \L\{ \tau^n \}$. The minimal polynomial of the Frobenius element is the monic polynomial $\Gamma_{\phi}(X) = X^d - \sum_{i=0}^{d-1} a_iX^i \in \F_q[x][X]$ of least degree such that 
 
 \begin{equation*}
     \tau^{dn} - \sum_{i=0}^{d-1}\phi_{a_i} \tau^{ni} = 0
@@ -198,7 +198,7 @@ When $r = 2$, the Frobenius element is known to satisfy the relation
     \tau^{2n} - \phi_{a}\tau^n - \phi_b = 0
 \end{equation}
 
-Such that either $M_\phi(X) = X^2 - aX - b$ or $M_{\phi}(X)^2 = X^2 - aX - b$. We may determine $b$ using equation $(\ref{norm})$, and therefore it suffices to compute $a$ and determine whether the resulting polynomial is a square. The coefficient $a$ is referred to as the $\textit{Frobenius trace}$.
+Such that either $\Gamma_{\phi}(X) = X^2 - aX - b$ or $\Gamma_{\phi}(X)^2 = X^2 - aX - b$. We may determine $b$ using equation $(\ref{norm})$, and therefore it suffices to compute $a$ and determine whether the resulting polynomial is a square. The coefficient $a$ is referred to as the $\textit{Frobenius trace}$.
 
 The classical algorithm for computing the minimal polynomials of Drinfeld modules is due to Gekeler in \cite{frobdist}. Write $\phi_{x^i} = \sum_{j=0}^{2i}f_{i,j}\tau^j$, and these $\phi_{x^i}$ satisfy
 
@@ -234,7 +234,7 @@ The cost of computing $\phi_{x^2}, \ldots, \phi_{x^{d_i -1}}$ and $\phi_{b \bmod
 
 \subsubsection{Using Hankel Systems}
 
-From the definition of the minimal polynomial, $\phi_{a_1} = -\tau^{2n} - \phi_{a_0}$, set $\phi_{a_1} := \sum_{i=0}^{\lfloor n/2 \rfloor} c_i\phi_{x}^i$ and $r := -\tau^{2n} - \phi_{a_0}$. For a uniformly random choice of $\F_q$-linear projection $\ell : \L \to \F_q$, $\alpha \in \L$, and for any $j > 0$ we may evaluate both sides of the equation at $\alpha$ to obtain:
+From the definition of the minimal polynomial, $\phi_{a} = \tau^{2n} - \phi_{b}$, set $\phi_{a} := \sum_{i=0}^{\lfloor n/2 \rfloor} c_i\phi_{x}^i$ and $r := \tau^{2n} - \phi_{b}$. For a uniformly random choice of $\F_q$-linear projection $\ell : \L \to \F_q$, $\alpha \in \L$, and for any $j > 0$ evaluate both sides of the equation at $\alpha$ to obtain:
 
 %\begin{equation*}
 %    \sum_{i=0}^{\lfloor n/2 \rfloor} c_i\phi_{x}^i(\alpha) = r(\alpha)
@@ -259,11 +259,11 @@ This yields the following $\nu \times \nu$ Hankel system over $\F_q$:
     \begin{bmatrix} \ell (r(\alpha)) \\ \vdots \\ \ell(\phi_x^{\nu - 1}r(\alpha)) \end{bmatrix}
 \end{equation*}
 
-Let $\Gamma_{\ell, \alpha}$ denote the minimal polynomial of the sequence $\{ \ell (\phi_x^i(\alpha))\}$. The solution to the preceding system is unique and yields the coefficients of the minimal polynomial if and only if $\Gamma_{\ell, \alpha} = \Gamma$. Under a uniform choice of $\ell, \alpha$, a classical argument due to Wiedemann in \cite{Wiedemann:1986:SSL:13738.13744} can be used to lower bound $\textnormal{Pr}[\Gamma_{\ell, \alpha} = \Gamma]$, and use of the Schwartz-Zippel lemma allows for a lower bound of $1-2n/q$. If $n$ is even, we may not be able to determine $c_{\lfloor n/2 \rfloor}$, in which case we let $\nu = \lfloor n/2 \rfloor$ and compute $c_{\lfloor n/2 \rfloor}$ via the formula
+Let $\Gamma_{\ell, \alpha}$ denote the minimal polynomial of the sequence $\{ \ell (\phi_x^i(\alpha))\}$, and $\Gamma$ the minimal polynomial of $\phi_x$. The solution to the preceding system is unique and yields the coefficients of the minimal polynomial if and only if $\Gamma_{\ell, \alpha} = \Gamma$. Under a uniform choice of $\ell, \alpha$, a classical argument due to Wiedemann in \cite{Wiedemann:1986:SSL:13738.13744} can be used to lower bound $\textnormal{Pr}[\Gamma_{\ell, \alpha} = \Gamma]$, and use of the Schwartz-Zippel lemma allows for a lower bound of $1-2n/q$. If $n$ is even, we may not be able to determine $c_{\lfloor n/2 \rfloor}$, in which case we let $\nu = \lfloor n/2 \rfloor$ and compute $c_{\lfloor n/2 \rfloor}$ via the formula
 \begin{equation*}
     c_{\lfloor n/2 \rfloor} = \textnormal{Tr}_{\F_{q^2}/\F_{q}}(\textnormal{N}_{\L/\F_{q^2}}(\Delta)^{-1})% \hspace{4mm} \cite{gekeler},
 \end{equation*}
-here $\F_{q^2}$ is a quadratic extension of $\F$ contained in $\L$, and $\textnormal{Tr}$ and $\textnormal{N}$ are the field trace and norm respectively. One can compute up to $2n$ elements of the sequence $\{ \ell (\phi_x^i(\alpha))\}$ using $(n^2 \log^2q)^{1 + o(1)}$ bit operations. $r(\alpha)$ and the resulting sequence $\ell(\phi_{x^i}(r(\alpha)))$ for $i \leq \nu -1$ can be computed using at most $(n^2 \log^2q)^{1 + o(1)}$ bit operations. Finally, the resulting Hankel system can be solved in $(n^2 \log q)^{1 + o(1)}$ bit operations, allowing for an overall runtime of $(n^2 \log^2q)^{1 + o(1)}$. 
+here $\F_{q^2}$ is a quadratic extension of $\F_q$ contained in $\L$, and $\textnormal{Tr}$ and $\textnormal{N}$ are the field trace and norm respectively. One can compute up to $2n$ elements of the sequence $\{ \ell (\phi_x^i(\alpha))\}$ using $(n^2 \log^2q)^{1 + o(1)}$ bit operations. $r(\alpha)$ and the resulting sequence $\ell(\phi_{x^i}(r(\alpha)))$ for $i \leq \nu -1$ can be computed using at most $(n^2 \log^2q)^{1 + o(1)}$ bit operations. Finally, the resulting Hankel system can be solved in $(n^2 \log q)^{1 + o(1)}$ bit operations, allowing for an overall runtime of $(n^2 \log^2q)^{1 + o(1)}$. 
 
 \subsection{Algorithms for Higher Ranks}
 
